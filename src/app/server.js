@@ -1,15 +1,22 @@
 import express from 'express';
 import sequelize from '../config/database.js';
 
+import userRoutes from './routes/userRoutes.js';
 
 const app = express();
 
 app.use(express.json());
 
+app.use("/users", userRoutes);
+
 async function start() {
     try {
         await sequelize.authenticate();
         console.log("✅ Conexão bem-sucedida com o banco!");
+
+        await sequelize.sync();
+        console.log("✅ Modelos sincronizados com o banco!");
+
         app.listen(3000, () => {
             console.log('Server is running on port 3000');
         });
