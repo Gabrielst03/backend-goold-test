@@ -1,24 +1,36 @@
 import User from "../models/User.js";
 
+import { hash } from "bcryptjs";
 
 export async function createUser(req, res) {
 
-    const { name, email, address, password } = req.body;
+    const { firstName, lastName, accountType, email, address, password } = req.body;
 
     const alreadyExists = await User.findOne({ where: { email } });
+
+    const passwordHash = await hash(password, 8);
 
     if (alreadyExists) {
         return res.status(400).json({ message: "Email already in use" });
     }
 
     const user = await User.create({
-        name,
+        firstName,
+        lastName,
         email,
+        accountType,
         address,
-        password
+        password: passwordHash,
     });
 
-    return res.status(201).json(user);
+    return res.status(201).json({
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        accountType: user.accountType,
+        address: user.address,
+    });
 }
 
 export async function getUsers(req, res) {
@@ -37,13 +49,13 @@ export async function getUserById(req, res) {
 
 export async function updateUser(req, res) {
     const { id } = req.params;
-    const { name, email, address, password } = req.body;
+    const { firstName, lastName, email, address } = req.body;
 
     const user = await User.findByPk(id);
     if (!user) {
         return res.status(404).json({ message: "User not found" });
     }
 
-    await user.update({ name, email, address, password });
+    await user.update({ firstName, lastName, email, address });
     return res.status(200).json(user);
 }
