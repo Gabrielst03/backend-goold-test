@@ -1,6 +1,6 @@
 import User from "../models/User.js";
-
 import { hash } from "bcryptjs";
+import { formatUserResponse } from "../utils/userFormatter.js";
 
 export async function createUser(req, res) {
 
@@ -23,28 +23,26 @@ export async function createUser(req, res) {
         password: passwordHash,
     });
 
-    return res.status(201).json({
-        id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        accountType: user.accountType,
-        address: user.address,
-    });
+    return res.status(201).json(formatUserResponse(user));
 }
 
 export async function getUsers(req, res) {
-    const users = await User.findAll();
-    return res.status(200).json(users);
+    const users = await User.findAll({
+        attributes: { exclude: ['password'] }
+    });
+    const formattedUsers = users.map(user => formatUserResponse(user));
+    return res.status(200).json(formattedUsers);
 }
 
 export async function getUserById(req, res) {
     const { id } = req.params;
-    const user = await User.findByPk(id);
+    const user = await User.findByPk(id, {
+        attributes: { exclude: ['password'] }
+    });
     if (!user) {
         return res.status(404).json({ message: "User not found" });
     }
-    return res.status(200).json(user);
+    return res.status(200).json(formatUserResponse(user));
 }
 
 export async function updateUser(req, res) {
@@ -57,5 +55,5 @@ export async function updateUser(req, res) {
     }
 
     await user.update({ firstName, lastName, email, address });
-    return res.status(200).json(user);
+    return res.status(200).json(formatUserResponse(user));
 }

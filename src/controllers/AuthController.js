@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import { compare } from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { JWT_CONFIG, extractTokenFromHeader } from "../config/jwt.js";
+import { formatUserResponse } from "../utils/userFormatter.js";
 
 export async function login(req, res) {
     try {
@@ -42,14 +43,7 @@ export async function login(req, res) {
         return res.status(200).json({
             message: "Login realizado com sucesso",
             token,
-            user: {
-                id: user.id,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email,
-                accountType: user.accountType,
-                address: user.address
-            }
+            user: formatUserResponse(user)
         });
 
     } catch (error) {
@@ -110,7 +104,7 @@ export async function getProfile(req, res) {
             });
         }
 
-        return res.status(200).json(user);
+        return res.status(200).json(formatUserResponse(user));
 
     } catch (error) {
         console.error("Erro ao buscar perfil:", error);
