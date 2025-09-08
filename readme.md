@@ -170,6 +170,176 @@ Authorization: Bearer <token>
 }
 ```
 
+## Endpoints de Agendamentos
+
+### GET /schedules/upcoming
+Lista próximos agendamentos (máximo 10).
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Response (200):**
+```json
+[
+  {
+    "id": 1,
+    "scheduleDate": "2025-09-15T14:00:00.000Z",
+    "userId": 1,
+    "roomId": 1,
+    "status": "confirmed",
+    "createdAt": "2025-09-08T10:00:00.000Z",
+    "updatedAt": "2025-09-08T10:00:00.000Z"
+  }
+]
+```
+
+### GET /schedules/my-schedules
+Lista agendamentos do usuário logado.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Query Parameters:**
+- `status` - Filtrar por status (pending, confirmed, cancelled)
+- `startDate` - Data inicial (YYYY-MM-DD)
+- `endDate` - Data final (YYYY-MM-DD)
+
+### POST /schedules
+Cria um novo agendamento.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Request Body:**
+```json
+{
+  "scheduleDate": "2025-09-15T14:00:00.000Z",
+  "roomId": 1
+}
+```
+
+**Response (201):**
+```json
+{
+  "id": 1,
+  "scheduleDate": "2025-09-15T14:00:00.000Z",
+  "userId": 1,
+  "roomId": 1,
+  "status": "pending",
+  "createdAt": "2025-09-08T10:00:00.000Z",
+  "updatedAt": "2025-09-08T10:00:00.000Z"
+}
+```
+
+**Validações:**
+- Data deve ser no futuro
+- Quarto deve existir e estar disponível
+- Não pode haver conflito de horário
+
+### GET /schedules
+Lista agendamentos (com filtros opcionais).
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Query Parameters:**
+- `status` - Filtrar por status (pending, confirmed, cancelled)
+- `roomId` - Filtrar por quarto
+- `userId` - Filtrar por usuário (apenas admin)
+- `startDate` - Data inicial (YYYY-MM-DD)
+- `endDate` - Data final (YYYY-MM-DD)
+
+**Exemplo:**
+```
+GET /schedules?status=confirmed&startDate=2025-09-01&endDate=2025-09-30
+```
+
+### GET /schedules/:id
+Busca um agendamento específico por ID.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Permissões:** Apenas próprio usuário ou admin
+
+### PUT /schedules/:id
+Atualiza um agendamento.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Request Body:**
+```json
+{
+  "scheduleDate": "2025-09-16T15:00:00.000Z",
+  "roomId": 2
+}
+```
+
+**Restrições:**
+- Apenas próprio usuário ou admin
+- Não pode atualizar agendamento confirmado (apenas admin)
+
+### PATCH /schedules/:id/status
+Atualiza status do agendamento (apenas admins).
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Request Body:**
+```json
+{
+  "status": "confirmed"
+}
+```
+
+**Status válidos:** `pending`, `confirmed`, `cancelled`
+
+### PATCH /schedules/:id/cancel
+Cancela um agendamento.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Response (200):**
+```json
+{
+  "message": "Schedule cancelled successfully",
+  "schedule": {
+    "id": 1,
+    "status": "cancelled"
+  }
+}
+```
+
+### DELETE /schedules/:id
+Remove um agendamento.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Restrições:**
+- Apenas próprio usuário ou admin
+- Não pode deletar agendamento confirmado (apenas admin)
+
 ## Exemplos de uso com curl
 
 ```bash
@@ -211,6 +381,39 @@ curl -X PATCH http://localhost:3000/rooms/1/availability \
   -d '{
     "availability": false
   }'
+
+# Criar agendamento
+curl -X POST http://localhost:3000/schedules \
+  -H "Authorization: Bearer SEU_TOKEN_AQUI" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "scheduleDate": "2025-09-15T14:00:00.000Z",
+    "roomId": 1
+  }'
+
+# Listar meus agendamentos
+curl -X GET http://localhost:3000/schedules/my-schedules \
+  -H "Authorization: Bearer SEU_TOKEN_AQUI"
+
+# Confirmar agendamento (admin)
+curl -X PATCH http://localhost:3000/schedules/1/status \
+  -H "Authorization: Bearer SEU_TOKEN_ADMIN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "confirmed"
+  }'
+
+# Cancelar agendamento
+curl -X PATCH http://localhost:3000/schedules/1/cancel \
+  -H "Authorization: Bearer SEU_TOKEN_AQUI"
+
+# Listar agendamentos com filtros
+curl -X GET "http://localhost:3000/schedules?status=confirmed&startDate=2025-09-01&endDate=2025-09-30" \
+  -H "Authorization: Bearer SEU_TOKEN_AQUI"
+
+# Próximos agendamentos
+curl -X GET http://localhost:3000/schedules/upcoming \
+  -H "Authorization: Bearer SEU_TOKEN_AQUI"
 ```
 
 ## Códigos de Status HTTP
@@ -221,4 +424,95 @@ curl -X PATCH http://localhost:3000/rooms/1/availability \
 - **401**: Não autorizado (token inválido/expirado)
 - **403**: Acesso negado (sem permissão)
 - **404**: Recurso não encontrado
+- **409**: Conflito (recurso já existe ou conflito de horário)
 - **500**: Erro interno do servidor
+
+## Sistema de Agendamentos
+
+### Status de Agendamento
+
+| Status | Descrição |
+|--------|-----------|
+| `pending` | Agendamento criado, aguardando confirmação |
+| `confirmed` | Agendamento confirmado pelo admin |
+| `cancelled` | Agendamento cancelado |
+
+### Regras de Negócio
+
+1. **Conflito de Horário**: Não é possível agendar o mesmo quarto para o mesmo horário
+2. **Data Futura**: Agendamentos só podem ser feitos para datas futuras
+3. **Disponibilidade**: Só é possível agendar quartos disponíveis
+4. **Confirmação**: Apenas admins podem confirmar agendamentos
+5. **Edição**: Agendamentos confirmados só podem ser editados por admins
+6. **Cancelamento**: Usuários podem cancelar seus próprios agendamentos
+
+### Permissões por Tipo de Usuário
+
+#### Customer (Usuário comum):
+- ✅ Criar agendamentos
+- ✅ Ver seus próprios agendamentos
+- ✅ Atualizar seus agendamentos (se não confirmados)
+- ✅ Cancelar seus agendamentos
+- ❌ Ver agendamentos de outros usuários
+- ❌ Confirmar agendamentos
+
+#### Admin (Administrador):
+- ✅ Todas as permissões de customer
+- ✅ Ver todos os agendamentos
+- ✅ Confirmar/cancelar qualquer agendamento
+- ✅ Atualizar qualquer agendamento
+- ✅ Deletar agendamentos confirmados
+
+## Estrutura do Banco de Dados
+
+### Users
+- `id` (Primary Key)
+- `firstName` (String)
+- `lastName` (String)
+- `email` (String, Unique)
+- `accountType` (Enum: 'customer', 'admin')
+- `address` (JSON)
+- `password` (String, Hash)
+
+### Rooms
+- `id` (Primary Key)
+- `number` (String, Unique)
+- `availability` (Boolean)
+
+### Schedules
+- `id` (Primary Key)
+- `scheduleDate` (DateTime)
+- `userId` (Foreign Key → Users)
+- `roomId` (Foreign Key → Rooms)
+- `status` (Enum: 'pending', 'confirmed', 'cancelled')
+
+## Tecnologias Utilizadas
+
+- **Node.js** com Express.js
+- **Sequelize** (ORM)
+- **MySQL** (Banco de dados)
+- **JWT** (Autenticação)
+- **bcryptjs** (Hash de senhas)
+- **Jest** (Testes)
+
+## Instalação e Execução
+
+1. Clone o repositório e instale as dependências:
+```bash
+npm install
+```
+
+2. Configure as variáveis de ambiente:
+```bash
+cp .env.example .env
+```
+
+3. Execute o servidor:
+```bash
+npm run dev
+```
+
+4. Execute os testes:
+```bash
+npm test
+```

@@ -4,6 +4,7 @@ import sequelize from '../config/database.js';
 import userRoutes from './routes/userRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import roomRoutes from './routes/roomRoutes.js';
+import scheduleRoutes from './routes/scheduleRoutes.js';
 
 const app = express();
 
@@ -12,6 +13,7 @@ app.use(express.json());
 app.use("/users", userRoutes);
 app.use("/auth", authRoutes);
 app.use("/rooms", roomRoutes);
+app.use("/schedules", scheduleRoutes);
 
 async function start() {
     try {
