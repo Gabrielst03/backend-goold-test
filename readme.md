@@ -239,7 +239,7 @@ Authorization: Bearer <token>
 
 **Validações:**
 - Data deve ser no futuro
-- Quarto deve existir e estar disponível
+- Sala deve existir e estar disponível
 - Não pode haver conflito de horário
 
 ### GET /schedules
@@ -252,7 +252,7 @@ Authorization: Bearer <token>
 
 **Query Parameters:**
 - `status` - Filtrar por status (pending, confirmed, cancelled)
-- `roomId` - Filtrar por quarto
+- `roomId` - Filtrar por sala
 - `userId` - Filtrar por usuário (apenas admin)
 - `startDate` - Data inicial (YYYY-MM-DD)
 - `endDate` - Data final (YYYY-MM-DD)
@@ -439,9 +439,9 @@ curl -X GET http://localhost:3000/schedules/upcoming \
 
 ### Regras de Negócio
 
-1. **Conflito de Horário**: Não é possível agendar o mesmo quarto para o mesmo horário
+1. **Conflito de Horário**: Não é possível agendar o mesmo sala para o mesmo horário
 2. **Data Futura**: Agendamentos só podem ser feitos para datas futuras
-3. **Disponibilidade**: Só é possível agendar quartos disponíveis
+3. **Disponibilidade**: Só é possível agendar salas disponíveis
 4. **Confirmação**: Apenas admins podem confirmar agendamentos
 5. **Edição**: Agendamentos confirmados só podem ser editados por admins
 6. **Cancelamento**: Usuários podem cancelar seus próprios agendamentos
