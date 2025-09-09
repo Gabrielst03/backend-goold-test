@@ -111,6 +111,18 @@ export async function getSchedules(req, res) {
 
         const schedules = await Schedule.findAll({
             where: whereConditions,
+            include: [
+                {
+                    model: Room,
+                    as: 'room',
+                    attributes: ['id', 'number', 'availability']
+                },
+                {
+                    model: User,
+                    as: 'user',
+                    attributes: ['id', 'firstName', 'lastName', 'email']
+                }
+            ],
             order: [['scheduleDate', 'ASC']]
         });
 
@@ -130,7 +142,20 @@ export async function getScheduleById(req, res) {
         const currentUserId = req.user.id;
         const isAdmin = req.user.accountType === 'admin';
 
-        const schedule = await Schedule.findByPk(id);
+        const schedule = await Schedule.findByPk(id, {
+            include: [
+                {
+                    model: Room,
+                    as: 'room',
+                    attributes: ['id', 'number', 'availability']
+                },
+                {
+                    model: User,
+                    as: 'user',
+                    attributes: ['id', 'firstName', 'lastName', 'email']
+                }
+            ]
+        });
 
         if (!schedule) {
             return res.status(404).json({
@@ -381,6 +406,13 @@ export async function getMySchedules(req, res) {
 
         const schedules = await Schedule.findAll({
             where: whereConditions,
+            include: [
+                {
+                    model: Room,
+                    as: 'room',
+                    attributes: ['id', 'number', 'availability']
+                }
+            ],
             order: [['scheduleDate', 'ASC']]
         });
 
@@ -415,6 +447,18 @@ export async function getUpcomingSchedules(req, res) {
 
         const schedules = await Schedule.findAll({
             where: whereConditions,
+            include: [
+                {
+                    model: Room,
+                    as: 'room',
+                    attributes: ['id', 'number', 'availability']
+                },
+                {
+                    model: User,
+                    as: 'user',
+                    attributes: ['id', 'firstName', 'lastName', 'email']
+                }
+            ],
             order: [['scheduleDate', 'ASC']],
             limit: 10
         });

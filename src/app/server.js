@@ -1,5 +1,8 @@
 import express from 'express';
+import cors from 'cors';
 import sequelize from '../config/database.js';
+
+import '../models/associations.js';
 
 import userRoutes from './routes/userRoutes.js';
 import authRoutes from './routes/authRoutes.js';
@@ -8,6 +11,13 @@ import scheduleRoutes from './routes/scheduleRoutes.js';
 import logsRoutes from './routes/logsRoutes.js';
 
 const app = express();
+
+app.use(cors({
+    origin: '*',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 app.use(express.json());
 
@@ -25,8 +35,8 @@ async function start() {
         await sequelize.sync();
         console.log("✅ Modelos sincronizados com o banco!");
 
-        app.listen(3000, () => {
-            console.log('Server is running on port 3000');
+        app.listen(3333, () => {
+            console.log('🚀 Server is running on port 3333');
         });
     } catch (error) {
         console.error("❌ Erro ao conectar:", error);
