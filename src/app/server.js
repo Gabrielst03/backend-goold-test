@@ -5,6 +5,7 @@ import userRoutes from './routes/userRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import roomRoutes from './routes/roomRoutes.js';
 import scheduleRoutes from './routes/scheduleRoutes.js';
+import logsRoutes from './routes/logsRoutes.js';
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.use("/users", userRoutes);
 app.use("/auth", authRoutes);
 app.use("/rooms", roomRoutes);
 app.use("/schedules", scheduleRoutes);
+app.use("/logs", logsRoutes);
 
 async function start() {
     try {

@@ -340,6 +340,124 @@ Authorization: Bearer <token>
 - Apenas próprio usuário ou admin
 - Não pode deletar agendamento confirmado (apenas admin)
 
+## Endpoints de Logs
+
+⚠️ **Nota**: Apenas administradores podem visualizar logs. Usuários comuns podem criar logs, mas não visualizá-los.
+
+### GET /logs/summary
+Retorna resumo dos logs (total, por módulo, últimos 7 dias) - **Apenas Admins**.
+
+**Headers:**
+```
+Authorization: Bearer <admin_token>
+```
+
+**Response (200):**
+```json
+{
+  "summary": {
+    "totalLogs": 125,
+    "recentLogs": 45,
+    "byModule": [
+      { "module": "Auth", "count": "50" },
+      { "module": "Schedule", "count": "35" },
+      { "module": "Account", "count": "40" }
+    ]
+  }
+}
+```
+
+### GET /logs/my-logs
+Lista logs do admin logado - **Apenas Admins**.
+
+**Headers:**
+```
+Authorization: Bearer <admin_token>
+```
+
+**Query Parameters:**
+- `module` - Filtrar por módulo (Auth, Schedule, Account)
+- `activityType` - Filtrar por tipo de atividade (Login, Logout, Criar Agendamento, etc.)
+- `startDate` - Data inicial (YYYY-MM-DD)
+- `endDate` - Data final (YYYY-MM-DD)
+- `limit` - Limite de resultados (padrão: 50)
+
+### GET /logs/module/:module
+Lista logs por módulo específico - **Apenas Admins**.
+
+**Headers:**
+```
+Authorization: Bearer <admin_token>
+```
+
+**Parâmetros válidos:** `Auth`, `Schedule`, `Account`
+
+**Query Parameters:**
+- `activityType` - Filtrar por tipo de atividade específica
+- `userId` - Filtrar por usuário
+- `startDate` - Data inicial (YYYY-MM-DD)
+- `endDate` - Data final (YYYY-MM-DD)
+- `limit` - Limite de resultados (padrão: 50)
+
+### POST /logs
+Cria um novo log de atividade - **Todos os usuários autenticados**.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Request Body:**
+```json
+{
+  "module": "Auth",
+  "activityType": "Login"
+}
+```
+
+**Response (201):**
+```json
+{
+  "message": "Log created successfully",
+  "log": {
+    "id": 1,
+    "userId": 1,
+    "module": "Auth",
+    "activityType": "Login",
+    "activityDate": "2025-09-09T10:00:00.000Z",
+    "createdAt": "2025-09-09T10:00:00.000Z",
+    "updatedAt": "2025-09-09T10:00:00.000Z"
+  }
+}
+```
+
+**Módulos válidos:** `Auth`, `Schedule`, `Account`
+
+**Exemplos de activityType:**
+- **Auth**: "Login", "Logout", "Atualização de E-mail", "Atualização de Senha"
+- **Schedule**: "Criar Agendamento", "Atualizar Agendamento", "Cancelar Agendamento", "Alterar Status do Agendamento"
+- **Account**: "Criar Usuário", "Atualizar Perfil", "Alterar Tipo de Conta"
+
+### GET /logs
+Lista todos os logs (com filtros) - **Apenas Admins**.
+
+**Headers:**
+```
+Authorization: Bearer <admin_token>
+```
+
+**Query Parameters:**
+- `module` - Filtrar por módulo (Auth, Schedule, Account)
+- `activityType` - Filtrar por tipo de atividade (Login, Logout, Criar Agendamento, etc.)
+- `userId` - Filtrar por usuário
+- `startDate` - Data inicial (YYYY-MM-DD)
+- `endDate` - Data final (YYYY-MM-DD)
+- `limit` - Limite de resultados (padrão: 50)
+
+**Permissões:**
+- **Usuários**: Podem apenas criar logs
+- **Admins**: Podem ver todos os logs e filtrar por usuário
+
 ## Exemplos de uso com curl
 
 ```bash
@@ -414,6 +532,31 @@ curl -X GET "http://localhost:3000/schedules?status=confirmed&startDate=2025-09-
 # Próximos agendamentos
 curl -X GET http://localhost:3000/schedules/upcoming \
   -H "Authorization: Bearer SEU_TOKEN_AQUI"
+
+# Criar log de atividade
+curl -X POST http://localhost:3000/logs \
+  -H "Authorization: Bearer SEU_TOKEN_AQUI" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "module": "Auth",
+    "activityType": "Login"
+  }'
+
+# Listar meus logs
+curl -X GET http://localhost:3000/logs/my-logs \
+  -H "Authorization: Bearer SEU_TOKEN_AQUI"
+
+# Resumo dos logs
+curl -X GET http://localhost:3000/logs/summary \
+  -H "Authorization: Bearer SEU_TOKEN_AQUI"
+
+# Logs por módulo com filtro de atividade
+curl -X GET "http://localhost:3000/logs/module/Auth?activityType=Login" \
+  -H "Authorization: Bearer SEU_TOKEN_AQUI"
+
+# Listar logs com filtros (admin)
+curl -X GET "http://localhost:3000/logs?module=Schedule&activityType=Criar%20Agendamento&startDate=2025-09-01&endDate=2025-09-30&limit=100" \
+  -H "Authorization: Bearer SEU_TOKEN_ADMIN"
 ```
 
 ## Códigos de Status HTTP
@@ -485,6 +628,50 @@ curl -X GET http://localhost:3000/schedules/upcoming \
 - `userId` (Foreign Key → Users)
 - `roomId` (Foreign Key → Rooms)
 - `status` (Enum: 'pending', 'confirmed', 'cancelled')
+
+### Logs
+- `id` (Primary Key)
+- `userId` (Foreign Key → Users)
+- `module` (Enum: 'Account', 'Schedule', 'Auth')
+- `activityType` (String - Descrição específica da atividade)
+- `activityDate` (DateTime)
+
+## Sistema de Logs
+
+### Módulos de Log
+
+| Módulo | Descrição |
+|--------|-----------|
+| `Auth` | Logs de autenticação (login, logout, etc.) |
+| `Schedule` | Logs de agendamentos (criar, editar, cancelar) |
+| `Account` | Logs de conta (criação, edição de perfil) |
+
+### Características dos Logs
+
+- **Apenas Criação**: Logs são apenas criados, nunca editados ou deletados
+- **Automático**: Podem ser criados automaticamente pelo sistema através de middlewares
+- **Auditoria**: Permitem rastreamento detalhado de atividades dos usuários
+- **Filtros**: Podem ser filtrados por módulo, tipo de atividade, usuário, data
+- **Permissões**: Apenas admins podem visualizar logs, usuários podem apenas criar
+- **ActivityType**: Campo livre para descrever especificamente a ação realizada
+
+### Log Automático por Middleware
+
+O sistema possui middleware que cria logs automaticamente para ações importantes:
+
+- **Login/Logout**: Registra automaticamente tentativas de autenticação
+- **CRUD Operations**: Registra criação, edição e exclusão de recursos
+- **Status Changes**: Registra mudanças de status em agendamentos
+
+**Exemplos de activityType automáticos:**
+- `"Login"` - Usuario fez login no sistema
+- `"Logout"` - Usuario fez logout
+- `"Criar Agendamento"` - Novo agendamento foi criado
+- `"Atualizar Agendamento"` - Agendamento foi modificado
+- `"Cancelar Agendamento"` - Agendamento foi cancelado
+- `"Criar Quarto"` - Novo quarto foi criado
+- `"Atualizar Quarto"` - Quarto foi modificado
+- `"Alterar Disponibilidade do Quarto"` - Disponibilidade foi alterada
 
 ## Tecnologias Utilizadas
 

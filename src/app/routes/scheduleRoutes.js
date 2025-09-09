@@ -12,15 +12,15 @@ import {
 } from "../../controllers/ScheduleController.js";
 import { verifyToken } from "../../controllers/AuthController.js";
 import { requireAdmin } from "../../middleware/authMiddleware.js";
+import { autoLog } from "../../middleware/logMiddleware.js";
 
 const router = Router();
 
 router.get("/upcoming", verifyToken, getUpcomingSchedules);
 
-// Rota para listar agendamentos do usuário logado
 router.get("/my-schedules", verifyToken, getMySchedules);
 
-router.post("/", verifyToken, createSchedule);
+router.post("/", verifyToken, autoLog("schedules", "Criação de agendamento"), createSchedule);
 
 router.get("/", verifyToken, getSchedules);
 
@@ -28,9 +28,9 @@ router.get("/:id", verifyToken, getScheduleById);
 
 router.put("/:id", verifyToken, updateSchedule);
 
-router.patch("/:id/status", verifyToken, requireAdmin, updateScheduleStatus);
+router.patch("/:id/status", verifyToken, requireAdmin, autoLog("schedules", "Alterar Status do Agendamento"), updateScheduleStatus);
 
-router.patch("/:id/cancel", verifyToken, cancelSchedule);
+router.patch("/:id/cancel", verifyToken, autoLog("schedules", "Cancelamento de agendamento"), cancelSchedule);
 
 router.delete("/:id", verifyToken, deleteSchedule);
 

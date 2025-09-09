@@ -18,6 +18,10 @@ const Logs = sequelize.define("Logs", {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
         allowNull: false
+    },
+    activityType: {
+        type: DataTypes.STRING,
+        allowNull: true
     }
 })
 
