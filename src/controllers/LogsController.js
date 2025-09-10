@@ -94,7 +94,8 @@ export async function getLogs(req, res) {
             limit: parseInt(limit),
             include: [{
                 model: User,
-                attributes: ['id', 'firstName', 'lastName', 'email'],
+                as: 'user',
+                attributes: ['id', 'firstName', 'lastName', 'email', 'accountType'],
                 required: false
             }]
         });
@@ -157,7 +158,7 @@ export async function getMyLogs(req, res) {
             limit: parseInt(limit),
             include: [{
                 model: User,
-                attributes: ['id', 'firstName', 'lastName', 'email'],
+                attributes: ['id', 'firstName', 'lastName', 'email', 'accountType'],
                 required: false
             }]
         });
@@ -218,7 +219,7 @@ export async function getLogsByModule(req, res) {
             limit: parseInt(limit),
             include: [{
                 model: User,
-                attributes: ['id', 'firstName', 'lastName', 'email'],
+                attributes: ['id', 'firstName', 'lastName', 'email', 'accountType'],
                 required: false
             }]
         });

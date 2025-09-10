@@ -1,6 +1,7 @@
 import User from './User.js';
 import Room from './Room.js';
 import Schedule from './Schedule.js';
+import Logs from './Logs.js';
 
 User.hasMany(Schedule, {
     foreignKey: 'userId',
@@ -22,4 +23,14 @@ Schedule.belongsTo(Room, {
     as: 'room'
 });
 
-export { User, Room, Schedule };
+User.hasMany(Logs, {
+    foreignKey: 'userId',
+    as: 'logs'
+});
+
+Logs.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'user'
+});
+
+export { User, Room, Schedule, Logs };

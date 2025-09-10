@@ -1,6 +1,7 @@
 import User from "../models/User.js";
 import { hash } from "bcryptjs";
 import { formatUserResponse } from "../utils/userFormatter.js";
+import { createActivityLog } from "./LogsController.js";
 
 export async function createUser(req, res) {
 
@@ -21,6 +22,10 @@ export async function createUser(req, res) {
         accountType,
         address,
         password: passwordHash,
+    });
+
+    createActivityLog(user.id, 'Account', 'Criação de Conta').catch(error => {
+        console.error('Error creating account creation log:', error);
     });
 
     return res.status(201).json(formatUserResponse(user));

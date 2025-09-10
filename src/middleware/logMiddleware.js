@@ -18,11 +18,39 @@ export function autoLog(module, activityType) {
     };
 }
 
+export function autoLogLogin(req, res, next) {
+    const originalJson = res.json;
 
+    res.json = function (data) {
+        if (res.statusCode >= 200 && res.statusCode < 300 && data.user) {
+            createActivityLog(data.user.id, 'Auth', 'Login').catch(error => {
+                console.error('Error creating login log:', error);
+            });
+        }
+
+        return originalJson.call(this, data);
+    };
+
+    next();
+}
+
+export function autoLogLogout(req, res, next) {
+    const originalJson = res.json;
+
+    res.json = function (data) {
+        if (res.statusCode >= 200 && res.statusCode < 300 && req.user) {
+            createActivityLog(req.user.id, 'Auth', 'Logout').catch(error => {
+                console.error('Error creating logout log:', error);
+            });
+        }
+
+        return originalJson.call(this, data);
+    };
+
+    next();
+}
 
 // Logs Predefinidos
-export const autoLogLogin = autoLog('Auth', 'Login');
-export const autoLogLogout = autoLog('Auth', 'Logout');
 export const autoLogCreateSchedule = autoLog('Schedule', 'Criação de Agendamento');
 export const autoLogUpdateSchedule = autoLog('Schedule', 'Atualização de Agendamento');
 export const autoLogCancelSchedule = autoLog('Schedule', 'Cancelamento de Agendamento');

@@ -20,7 +20,7 @@ router.get("/upcoming", verifyToken, getUpcomingSchedules);
 
 router.get("/my-schedules", verifyToken, getMySchedules);
 
-router.post("/", verifyToken, autoLog("schedules", "Criação de agendamento"), createSchedule);
+router.post("/", verifyToken, autoLog("Schedule", "Criação de agendamento"), createSchedule);
 
 router.get("/", verifyToken, getSchedules);
 
@@ -28,9 +28,9 @@ router.get("/:id", verifyToken, getScheduleById);
 
 router.put("/:id", verifyToken, updateSchedule);
 
-router.patch("/:id/status", verifyToken, requireAdmin, autoLog("schedules", "Alterar Status do Agendamento"), updateScheduleStatus);
+router.patch("/:id/status", verifyToken, requireAdmin, autoLog("Schedule", "Alterar Status do Agendamento"), updateScheduleStatus);
 
-router.patch("/:id/cancel", verifyToken, autoLog("schedules", "Cancelamento de agendamento"), cancelSchedule);
+router.patch("/:id/cancel", verifyToken, autoLog("Schedule", "Cancelamento de agendamento"), cancelSchedule);
 
 router.delete("/:id", verifyToken, deleteSchedule);
 
