@@ -11,14 +11,14 @@ import { requireAdmin } from "../../middleware/authMiddleware.js";
 
 const router = Router();
 
-router.get("/summary", verifyToken, requireAdmin, getLogsSummary);
+router.get("/summary", verifyToken, getLogsSummary);
 
-router.get("/my-logs", verifyToken, requireAdmin, getMyLogs);
+router.get("/my", verifyToken, getMyLogs);
 
-router.get("/module/:module", verifyToken, requireAdmin, getLogsByModule);
+router.get("/module/:module", verifyToken, getLogsByModule);
 
 router.post("/", verifyToken, createLog);
 
-router.get("/", verifyToken, requireAdmin, getLogs);
+router.get("/", verifyToken, getLogs);
 
 export default router;

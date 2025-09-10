@@ -51,21 +51,22 @@ export async function getLogs(req, res) {
     try {
         const { module, userId, activityType, startDate, endDate, limit = 50 } = req.query;
         const isAdmin = req.user.accountType === 'admin';
-
-        if (!isAdmin) {
-            return res.status(403).json({
-                message: "Access denied. Only admins can view logs"
-            });
-        }
+        const currentUserId = req.user.id;
 
         let whereConditions = {};
 
-        if (module) {
-            whereConditions.module = module;
+        // Se não for admin, só pode ver seus próprios logs
+        if (!isAdmin) {
+            whereConditions.userId = currentUserId;
+        } else {
+            // Se for admin e especificou um userId, filtrar por esse userId
+            if (userId) {
+                whereConditions.userId = userId;
+            }
         }
 
-        if (userId) {
-            whereConditions.userId = userId;
+        if (module) {
+            whereConditions.module = module;
         }
 
         if (activityType) {
@@ -115,14 +116,6 @@ export async function getLogs(req, res) {
 
 export async function getMyLogs(req, res) {
     try {
-        const isAdmin = req.user.accountType === 'admin';
-
-        if (!isAdmin) {
-            return res.status(403).json({
-                message: "Access denied. Only admins can view logs"
-            });
-        }
-
         const userId = req.user.id;
         const { module, activityType, startDate, endDate, limit = 50 } = req.query;
 
@@ -158,6 +151,7 @@ export async function getMyLogs(req, res) {
             limit: parseInt(limit),
             include: [{
                 model: User,
+                as: 'user',
                 attributes: ['id', 'firstName', 'lastName', 'email', 'accountType'],
                 required: false
             }]
@@ -180,13 +174,8 @@ export async function getLogsByModule(req, res) {
     try {
         const { module } = req.params;
         const isAdmin = req.user.accountType === 'admin';
+        const currentUserId = req.user.id;
         const { userId, activityType, startDate, endDate, limit = 50 } = req.query;
-
-        if (!isAdmin) {
-            return res.status(403).json({
-                message: "Access denied. Only admins can view logs"
-            });
-        }
 
         const validModules = ['Account', 'Schedule', 'Auth'];
         if (!validModules.includes(module)) {
@@ -197,8 +186,14 @@ export async function getLogsByModule(req, res) {
 
         let whereConditions = { module };
 
-        if (userId) {
-            whereConditions.userId = userId;
+        // Se não for admin, só pode ver seus próprios logs
+        if (!isAdmin) {
+            whereConditions.userId = currentUserId;
+        } else {
+            // Se for admin e especificou um userId, filtrar por esse userId
+            if (userId) {
+                whereConditions.userId = userId;
+            }
         }
 
         if (activityType) {
@@ -219,6 +214,7 @@ export async function getLogsByModule(req, res) {
             limit: parseInt(limit),
             include: [{
                 model: User,
+                as: 'user',
                 attributes: ['id', 'firstName', 'lastName', 'email', 'accountType'],
                 required: false
             }]
@@ -241,14 +237,14 @@ export async function getLogsByModule(req, res) {
 export async function getLogsSummary(req, res) {
     try {
         const isAdmin = req.user.accountType === 'admin';
-
-        if (!isAdmin) {
-            return res.status(403).json({
-                message: "Access denied. Only admins can view logs"
-            });
-        }
+        const currentUserId = req.user.id;
 
         let whereConditions = {};
+
+        // Se não for admin, só pode ver seus próprios logs
+        if (!isAdmin) {
+            whereConditions.userId = currentUserId;
+        }
 
         const logsSummary = await Logs.findAll({
             where: whereConditions,
