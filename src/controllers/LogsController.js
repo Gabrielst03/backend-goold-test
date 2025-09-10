@@ -55,11 +55,9 @@ export async function getLogs(req, res) {
 
         let whereConditions = {};
 
-        // Se não for admin, só pode ver seus próprios logs
         if (!isAdmin) {
             whereConditions.userId = currentUserId;
         } else {
-            // Se for admin e especificou um userId, filtrar por esse userId
             if (userId) {
                 whereConditions.userId = userId;
             }
@@ -186,11 +184,9 @@ export async function getLogsByModule(req, res) {
 
         let whereConditions = { module };
 
-        // Se não for admin, só pode ver seus próprios logs
         if (!isAdmin) {
             whereConditions.userId = currentUserId;
         } else {
-            // Se for admin e especificou um userId, filtrar por esse userId
             if (userId) {
                 whereConditions.userId = userId;
             }
@@ -241,7 +237,6 @@ export async function getLogsSummary(req, res) {
 
         let whereConditions = {};
 
-        // Se não for admin, só pode ver seus próprios logs
         if (!isAdmin) {
             whereConditions.userId = currentUserId;
         }
