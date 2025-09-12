@@ -49,7 +49,7 @@ export async function createLog(req, res) {
 
 export async function getLogs(req, res) {
     try {
-        const { module, userId, activityType, startDate, endDate, limit = 50 } = req.query;
+        const { module, userId, activityType, startDate, endDate, page = 1, limit = 10 } = req.query;
         const isAdmin = req.user.accountType === 'admin';
         const currentUserId = req.user.id;
 
@@ -87,10 +87,17 @@ export async function getLogs(req, res) {
             };
         }
 
-        const logs = await Logs.findAll({
+        // Calcular offset para paginação
+        const pageNum = parseInt(page);
+        const limitNum = parseInt(limit);
+        const offset = (pageNum - 1) * limitNum;
+
+        // Buscar logs com paginação
+        const { count, rows: logs } = await Logs.findAndCountAll({
             where: whereConditions,
             order: [['activityDate', 'DESC']],
-            limit: parseInt(limit),
+            limit: limitNum,
+            offset: offset,
             include: [{
                 model: User,
                 as: 'user',
@@ -99,9 +106,18 @@ export async function getLogs(req, res) {
             }]
         });
 
+        // Calcular informações de paginação
+        const totalPages = Math.ceil(count / limitNum);
+        const hasNextPage = pageNum < totalPages;
+        const hasPreviousPage = pageNum > 1;
+
         return res.status(200).json({
-            total: logs.length,
-            logs
+            total: count,
+            logs,
+            totalPages,
+            currentPage: pageNum,
+            hasNextPage,
+            hasPreviousPage
         });
 
     } catch (error) {
@@ -115,7 +131,7 @@ export async function getLogs(req, res) {
 export async function getMyLogs(req, res) {
     try {
         const userId = req.user.id;
-        const { module, activityType, startDate, endDate, limit = 50 } = req.query;
+        const { module, activityType, startDate, endDate, page = 1, limit = 10 } = req.query;
 
         let whereConditions = { userId };
 
@@ -143,10 +159,15 @@ export async function getMyLogs(req, res) {
             };
         }
 
-        const logs = await Logs.findAll({
+        const pageNum = parseInt(page);
+        const limitNum = parseInt(limit);
+        const offset = (pageNum - 1) * limitNum;
+
+        const { count, rows: logs } = await Logs.findAndCountAll({
             where: whereConditions,
             order: [['activityDate', 'DESC']],
-            limit: parseInt(limit),
+            limit: limitNum,
+            offset: offset,
             include: [{
                 model: User,
                 as: 'user',
@@ -155,9 +176,17 @@ export async function getMyLogs(req, res) {
             }]
         });
 
+        const totalPages = Math.ceil(count / limitNum);
+        const hasNextPage = pageNum < totalPages;
+        const hasPreviousPage = pageNum > 1;
+
         return res.status(200).json({
-            total: logs.length,
-            logs
+            total: count,
+            logs,
+            totalPages,
+            currentPage: pageNum,
+            hasNextPage,
+            hasPreviousPage
         });
 
     } catch (error) {
