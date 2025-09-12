@@ -73,7 +73,7 @@ export async function createSchedule(req, res) {
 
 export async function getSchedules(req, res) {
     try {
-        const { status, roomId, userId, startDate, endDate } = req.query;
+        const { status, roomId, userId, startDate, endDate, page = 1, limit = 10 } = req.query;
         const currentUserId = req.user.id;
         const isAdmin = req.user.accountType === 'admin';
 
@@ -109,7 +109,11 @@ export async function getSchedules(req, res) {
             };
         }
 
-        const schedules = await Schedule.findAll({
+        const pageNum = parseInt(page, 10) || 1;
+        const limitNum = parseInt(limit, 10) || 10;
+        const offset = (pageNum - 1) * limitNum;
+
+        const { count: total, rows: schedules } = await Schedule.findAndCountAll({
             where: whereConditions,
             include: [
                 {
@@ -123,10 +127,22 @@ export async function getSchedules(req, res) {
                     attributes: ['id', 'firstName', 'lastName', 'email']
                 }
             ],
-            order: [['scheduleDate', 'ASC']]
+            order: [['scheduleDate', 'ASC']],
+            limit: limitNum,
+            offset
         });
 
-        return res.status(200).json(schedules);
+        const totalPages = Math.ceil(total / limitNum);
+        const hasNextPage = pageNum < totalPages;
+        const hasPreviousPage = pageNum > 1;
+
+        return res.status(200).json({
+            schedules,
+            total,
+            totalPages,
+            hasNextPage,
+            hasPreviousPage
+        });
 
     } catch (error) {
         console.error("Error fetching schedules:", error);
