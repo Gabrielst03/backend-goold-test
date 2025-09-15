@@ -7,6 +7,7 @@ export function formatUserResponse(user) {
         lastName: userObject.lastName,
         email: userObject.email,
         accountType: userObject.accountType,
+        status: userObject.status,
         address: formatAddress(userObject.address),
         createdAt: userObject.createdAt,
         updatedAt: userObject.updatedAt
