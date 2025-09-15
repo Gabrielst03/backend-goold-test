@@ -53,18 +53,27 @@ export async function getUserById(req, res) {
 export async function updateUser(req, res) {
     try {
         const { id } = req.params;
-        const { firstName, lastName, email, address } = req.body;
+        const { firstName, lastName, email, address, accountType } = req.body;
 
         const user = await User.findByPk(id);
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        await user.update({ firstName, lastName, email, address });
+        const isAccountTypeChange = accountType && accountType !== user.accountType;
 
-        createActivityLog(req.user.id, 'Account', 'Atualização de Perfil').catch(error => {
-            console.error('Error creating profile update log:', error);
-        });
+        await user.update({ firstName, lastName, email, address, accountType });
+
+        if (isAccountTypeChange) {
+            const action = accountType === 'admin' ? 'Promoção a Administrador' : 'Atualização de Tipo de Conta';
+            createActivityLog(req.user.id, 'Account', action).catch(error => {
+                console.error('Error creating account type change log:', error);
+            });
+        } else {
+            createActivityLog(req.user.id, 'Account', 'Atualização de Perfil').catch(error => {
+                console.error('Error creating profile update log:', error);
+            });
+        }
 
         return res.status(200).json(formatUserResponse(user));
     } catch (error) {
