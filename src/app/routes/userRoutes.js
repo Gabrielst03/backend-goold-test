@@ -9,6 +9,7 @@ router.post("/", createUser);
 
 router.get("/", verifyToken, requireAdmin, getUsers);
 router.get("/:id", verifyToken, requireOwnershipOrAdmin, getUserById);
+router.put("/:id", verifyToken, requireOwnershipOrAdmin, updateUser);
 
 router.patch("/:id/status", verifyToken, requireAdmin, updateUserStatus);
 
