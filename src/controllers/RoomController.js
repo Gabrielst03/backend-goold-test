@@ -2,7 +2,7 @@ import Room from '../models/Room.js';
 
 export async function createRoom(req, res) {
     try {
-        const { number } = req.body;
+        const { number, startTime, endTime, intervalMinutes } = req.body;
 
         if (!number) {
             return res.status(400).json({ message: "Room number is required" });
@@ -16,7 +16,10 @@ export async function createRoom(req, res) {
 
         const room = await Room.create({
             number,
-            availability: true
+            availability: true,
+            startTime,
+            endTime,
+            intervalMinutes: intervalMinutes || 30
         });
 
         return res.status(201).json(room);
@@ -81,7 +84,7 @@ export async function updateRoomAvailability(req, res) {
 export async function updateRoom(req, res) {
     try {
         const { id } = req.params;
-        const { number, availability } = req.body;
+        const { number, availability, startTime, endTime, intervalMinutes } = req.body;
 
         const room = await Room.findByPk(id);
 
@@ -98,6 +101,9 @@ export async function updateRoom(req, res) {
 
         if (number) room.number = number;
         if (typeof availability === 'boolean') room.availability = availability;
+        if (startTime) room.startTime = startTime;
+        if (endTime) room.endTime = endTime;
+        if (intervalMinutes) room.intervalMinutes = intervalMinutes;
 
         await room.save();
 

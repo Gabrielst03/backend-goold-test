@@ -12,6 +12,19 @@ const Room = sequelize.define("Rooms", {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
         allowNull: false,
+    },
+    startTime: {
+        type: DataTypes.TIME,
+        allowNull: true,
+    },
+    endTime: {
+        type: DataTypes.TIME,
+        allowNull: true,
+    },
+    intervalMinutes: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 30,
     }
 })
 
