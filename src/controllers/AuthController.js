@@ -30,6 +30,12 @@ export async function login(req, res) {
             });
         }
 
+        if (!user.status) {
+            return res.status(403).json({
+                message: "Conta desativada. Entre em contato com o administrador."
+            });
+        }
+
         const token = jwt.sign(
             {
                 id: user.id,

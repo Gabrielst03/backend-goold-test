@@ -62,3 +62,48 @@ export async function updateUser(req, res) {
     await user.update({ firstName, lastName, email, address });
     return res.status(200).json(formatUserResponse(user));
 }
+
+export async function updateUserStatus(req, res) {
+    try {
+        const { id } = req.params;
+        const { isActive } = req.body;
+        const currentUserId = req.user.id;
+
+        if (typeof isActive !== 'boolean') {
+            return res.status(400).json({
+                message: "isActive deve ser um valor booleano"
+            });
+        }
+
+        if (parseInt(id) === currentUserId && !isActive) {
+            return res.status(403).json({
+                message: "Você não pode desativar sua própria conta"
+            });
+        }
+
+        const user = await User.findByPk(id);
+        if (!user) {
+            return res.status(404).json({
+                message: "Usuário não encontrado"
+            });
+        }
+
+        await user.update({ status: isActive });
+
+        const action = isActive ? 'Ativação de Conta' : 'Desativação de Conta';
+        createActivityLog(req.user.id, 'Account', action).catch(error => {
+            console.error('Error creating status update log:', error);
+        });
+
+        return res.status(200).json({
+            message: `Usuário ${isActive ? 'ativado' : 'desativado'} com sucesso`,
+            user: formatUserResponse(user)
+        });
+
+    } catch (error) {
+        console.error("Erro ao atualizar status do usuário:", error);
+        return res.status(500).json({
+            message: "Erro interno do servidor"
+        });
+    }
+}
