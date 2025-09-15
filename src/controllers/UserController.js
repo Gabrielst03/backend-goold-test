@@ -65,7 +65,14 @@ export async function updateUser(req, res) {
         await user.update({ firstName, lastName, email, address, accountType });
 
         if (isAccountTypeChange) {
-            const action = accountType === 'admin' ? 'Promoção a Administrador' : 'Atualização de Tipo de Conta';
+            let action;
+            if (accountType === 'admin' && user.accountType === 'customer') {
+                action = 'Promoção a Administrador';
+            } else if (accountType === 'customer' && user.accountType === 'admin') {
+                action = 'Rebaixamento de Administrador';
+            } else {
+                action = 'Atualização de Tipo de Conta';
+            }
             createActivityLog(req.user.id, 'Account', action).catch(error => {
                 console.error('Error creating account type change log:', error);
             });
